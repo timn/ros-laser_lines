@@ -1,0 +1,13 @@
+*~
+*.so
+/bin/
+/build/
+/lib/
+/msg_gen/
+/msg/*/
+/ROS_NOBUILD
+/src/*/srv/
+/src/*/msg/
+/src/laser_lines/
+/srv_gen/
+/srv/*/
