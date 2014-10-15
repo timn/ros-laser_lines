@@ -12,6 +12,8 @@
   <depend package="pcl_conversions"/>
   <depend package="sensor_msgs"/>
   <depend package="geometry_msgs"/>
+  <depend package="laser_geometry"/>
+  <depend package="visualization_msgs"/>
 </package>
 
 
