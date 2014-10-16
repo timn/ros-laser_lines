@@ -34,6 +34,7 @@
 
 #include <pcl_conversions/pcl_conversions.h>
 #include <pcl/segmentation/sac_segmentation.h>
+#include <pcl/segmentation/extract_clusters.h>
 #include <pcl/sample_consensus/method_types.h>
 #include <pcl/sample_consensus/model_types.h>
 #include <pcl/filters/extract_indices.h>
@@ -96,6 +97,8 @@ class LaserLines {
     privnh.param("line_segmentation_sample_max_dist", cfg_segm_sample_max_dist_, 0.15);
     privnh.param("line_segmentation_min_inliers", cfg_segm_min_inliers_, 30);
     privnh.param("line_min_length", cfg_min_length_, 0.8);
+    privnh.param("line_cluster_tolerance", cfg_line_cluster_tolerance_, 0.4);
+    privnh.param("line_cluster_quota", cfg_line_cluster_quota_, 0.5);
     privnh.param("switch_tolerance", cfg_switch_tolerance_, 0.3);
 
     printf("line_segmentation_max_iterations %u\n", cfg_segm_max_iterations_);
@@ -103,18 +106,14 @@ class LaserLines {
     printf("line_segmentation_sample_max_dist %f\n", cfg_segm_sample_max_dist_);
     printf("line_segmentation_min_inliers %i\n", cfg_segm_min_inliers_);
     printf("line_min_length %f\n", cfg_min_length_);
+    printf("line_cluster_tolerance %f\n", cfg_line_cluster_tolerance_);
+    printf("line_cluster_quota %f\n", cfg_line_cluster_quota_);
     printf("switch_tolerance %f\n", cfg_switch_tolerance_);
 
     // these are actually unsigned, but since NodeHandle::param does
     // not support those, assert this...
     assert(cfg_segm_min_inliers_ > 0);
     assert(cfg_segm_max_iterations_ > 0);
-
-    seg_.setOptimizeCoefficients(true);
-    seg_.setModelType(pcl::SACMODEL_LINE);
-    seg_.setMethodType(pcl::SAC_RANSAC);
-    seg_.setMaxIterations(cfg_segm_max_iterations_);
-    seg_.setDistanceThreshold(cfg_segm_distance_threshold_);
 
     sub_scan_       = nh_.subscribe("scan", 1, &LaserLines::process_scan, this);
     pub_lines_      = nh_.advertise<laser_lines::LaserLines>("lines", 1, true);
@@ -162,9 +161,16 @@ class LaserLines {
       pcl::search::KdTree<PointType>::Ptr
 	search(new pcl::search::KdTree<PointType>);
       search->setInputCloud(in_cloud);
-      seg_.setSamplesMaxDist(cfg_segm_sample_max_dist_, search); 
-      seg_.setInputCloud (in_cloud);
-      seg_.segment(*inliers, *coeff);
+
+      pcl::SACSegmentation<PointType> seg;
+      seg.setOptimizeCoefficients(true);
+      seg.setModelType(pcl::SACMODEL_LINE);
+      seg.setMethodType(pcl::SAC_RANSAC);
+      seg.setMaxIterations(cfg_segm_max_iterations_);
+      seg.setDistanceThreshold(cfg_segm_distance_threshold_);
+      seg.setSamplesMaxDist(cfg_segm_sample_max_dist_, search); 
+      seg.setInputCloud(in_cloud);
+      seg.segment(*inliers, *coeff);
       if (inliers->indices.size () == 0) {
 	// no line found
 	break;
@@ -180,22 +186,63 @@ class LaserLines {
       //logger->log_info(name(), "[L %u] Found line with %zu inliers",
       //		     loop_count_, inliers->indices.size());
 
-      LineInfo info;
-      info.index = linfos.size();
-      info.cloud.reset(new Cloud());
 
-      // Remove the linear inliers, extract the rest
+      // Cluster within the line to make sure it is a contiguous line
+      // the line search can output a line which combines lines at separate
+      // ends of the field of view...
+
+      pcl::search::KdTree<PointType>::Ptr
+	kdtree_line_cluster(new pcl::search::KdTree<PointType>());
+      pcl::search::KdTree<PointType>::IndicesConstPtr
+	search_indices(new std::vector<int>(inliers->indices));
+      kdtree_line_cluster->setInputCloud(in_cloud, search_indices);
+
+      std::vector<pcl::PointIndices> line_cluster_indices;
+      pcl::EuclideanClusterExtraction<PointType> line_ec;
+      line_ec.setClusterTolerance(cfg_line_cluster_tolerance_);
+      line_ec.setMinClusterSize(cfg_line_cluster_quota_ * inliers->indices.size());
+      line_ec.setMaxClusterSize(inliers->indices.size());
+      line_ec.setSearchMethod(kdtree_line_cluster);
+      line_ec.setInputCloud(in_cloud);
+      line_ec.setIndices(inliers);
+      line_ec.extract(line_cluster_indices);
+
+      pcl::PointIndices::Ptr line_cluster_index;
+      if (! line_cluster_indices.empty()) {
+	line_cluster_index = pcl::PointIndices::Ptr(new pcl::PointIndices(line_cluster_indices[0]));
+      }
+
+      // re-calculate coefficients based on line cluster only
+      if (line_cluster_index) {
+	pcl::SACSegmentation<PointType> segc;
+	segc.setOptimizeCoefficients(true);
+	segc.setModelType(pcl::SACMODEL_LINE);
+	segc.setMethodType(pcl::SAC_RANSAC);
+	segc.setMaxIterations(cfg_segm_max_iterations_);
+	segc.setDistanceThreshold(cfg_segm_distance_threshold_);
+	segc.setInputCloud(in_cloud);
+	segc.setIndices(line_cluster_index);
+	segc.segment(*inliers, *coeff);
+      }
+
+      // Remove the linear or clustered inliers, extract the rest
       CloudPtr cloud_f(new Cloud());
       CloudPtr cloud_line(new Cloud());
       pcl::ExtractIndices<PointType> extract;
       extract.setInputCloud(in_cloud);
-      extract.setIndices(inliers);
+      extract.setIndices(line_cluster_index ? line_cluster_index : inliers);
       extract.setNegative(false);
       extract.filter(*cloud_line);
 
       extract.setNegative(true);
       extract.filter(*cloud_f);
       *in_cloud = *cloud_f;
+
+      if (!line_cluster_index)  continue;
+
+      LineInfo info;
+      info.index = linfos.size();
+      info.cloud.reset(new Cloud());
 
       // Check if this line has the requested minimum length
       float length = calc_line_length(cloud_line, coeff);
@@ -496,9 +543,10 @@ class LaserLines {
   double       cfg_min_length_;
   int          cfg_segm_min_inliers_;
   double       cfg_switch_tolerance_;
+  double       cfg_line_cluster_tolerance_;
+  double       cfg_line_cluster_quota_;
 
   laser_geometry::LaserProjection laser_proj_;
-  pcl::SACSegmentation<PointType> seg_;
 
   std::vector<LineInfo> last_lines_;
 
