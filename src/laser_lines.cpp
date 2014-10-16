@@ -136,7 +136,7 @@ class LaserLines {
       // synchronized, we might start before any data has been read
       ROS_WARN("Empty voxelized point cloud, omitting loop");
       //TimeWait::wait(50000);
-      publish(linfos, scan->header.frame_id);
+      publish(linfos, scan->header.frame_id, scan->header.stamp);
       return;
     }
 
@@ -243,7 +243,7 @@ class LaserLines {
     // sort lines by bearing to stabilize IDs (requires LineInfo::operator<)
     std::sort(linfos.begin(), linfos.end());
 
-    publish(linfos, scan->header.frame_id);
+    publish(linfos, scan->header.frame_id, scan->header.stamp);
     publish_visualization(linfos, scan->header.frame_id);
     last_lines_ = linfos;
   }
@@ -308,10 +308,10 @@ class LaserLines {
     }
   }
 
-  void publish(std::vector<LineInfo> &lines, const std::string &frame_id)
+  void publish(std::vector<LineInfo> &lines, const std::string &frame_id, const ros::Time &time)
   {
     laser_lines::LaserLines lines_msg;
-    lines_msg.header.stamp = ros::Time::now();
+    lines_msg.header.stamp = time;
     lines_msg.header.frame_id = frame_id;
     for (size_t i = 0; i < lines.size(); ++i) {
       laser_lines::LaserLine line_msg;
