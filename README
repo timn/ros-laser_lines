@@ -1,0 +1,19 @@
+
+laser_lines: line detection in laser data as reference frame for ROS
+====================================================================
+
+This package contains two nodes. The laser_lines node takes a laser scan as
+input and detects lines within that data. This can be used, for example, to
+align in parallel to an object like furniture in the environment. The
+landmark_frame node uses this data to calculate and publish a reference frame
+with respect to a-priori known landmarks based on laser line intersection.
+
+Requirements
+------------
+The package builds on only basic ROS packages and PCL. It has been
+tested on ROS Fuerte (still used on the Freiburg PR2) and PCL 1.7.
+
+Documentation
+-------------
+The example launch file and landmark configuration contain the parameter
+documentation.
