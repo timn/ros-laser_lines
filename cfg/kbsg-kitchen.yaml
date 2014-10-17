@@ -1,0 +1,54 @@
+
+landmarks:
+  - name: counter_long_edge
+    # Name of the frame to publish for this coordinate frame
+    # If unset will use the default set as a parameter
+    # frame: /table
+    # If the robot position is within the given bounding box this
+    # location is considered to be active.
+    # Format: [x1, y1, x2, y2] where (x,y) is a point in the global frame
+    # for the start and the end corner (we assume to be the first point to
+    # be the "lower left" corner and the second to be the "upper right"
+    # corner with respect to the global coordinate frame
+    # coordinates are in the global frame, defaults to /map (see param)
+    bbox: [3.8, 5.9, 5.65, 7.95]
+    # The expected intersection point in the map frame
+    intersection: [5.591, 5.598]
+
+    # The axis in the global frame to align the X axis of the offset frame
+    # with.
+    axis: [1, 0, 0]
+    
+    # Offset to add from the found line intersection to the actual landmark
+    offset: [1.425, -0.025, 0.895]
+
+    # The orientation of the landmark frame in the global frame
+    # Quaternion (4 values) or roll/pitch/yaw angles (3 values, degrees)
+    orientation: [0, 0, -90]
+
+
+  - name: counter_short_edge
+    # Name of the frame to publish for this coordinate frame
+    # If unset will use the default set as a parameter
+    # frame: /table
+    # If the robot position is within the given bounding box this
+    # location is considered to be active.
+    # Format: [x1, y1, x2, y2] where (x,y) is a point in the global frame
+    # for the start and the end corner (we assume to be the first point to
+    # be the "lower left" corner and the second to be the "upper right"
+    # corner with respect to the global coordinate frame
+    # coordinates are in the global frame, defaults to /map (see param)
+    bbox: [3.0, 5.0, 4.3, 6.0]
+    # The expected intersection point in the map frame
+    intersection: [4.205, 9.082]
+
+    # The axis in the global frame to align the X axis of the offset frame
+    # with.
+    axis: [0, 1, 0]
+    
+    # Offset to add from the found line intersection to the actual landmark
+    offset: [3.41, -0.02, 0.895]
+
+    # The orientation of the landmark frame in the global frame
+    # Quaternion (4 values) or roll/pitch/yaw angles (3 values, degrees)
+    orientation: [0, 0, -90]
