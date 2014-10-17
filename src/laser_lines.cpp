@@ -99,6 +99,7 @@ class LaserLines {
     privnh.param("line_min_length", cfg_min_length_, 0.8);
     privnh.param("line_cluster_tolerance", cfg_line_cluster_tolerance_, 0.4);
     privnh.param("line_cluster_quota", cfg_line_cluster_quota_, 0.5);
+    privnh.param("line_min_distance", cfg_line_min_distance_, 0.1);
     privnh.param("switch_tolerance", cfg_switch_tolerance_, 0.3);
 
     printf("line_segmentation_max_iterations %u\n", cfg_segm_max_iterations_);
@@ -106,6 +107,7 @@ class LaserLines {
     printf("line_segmentation_sample_max_dist %f\n", cfg_segm_sample_max_dist_);
     printf("line_segmentation_min_inliers %i\n", cfg_segm_min_inliers_);
     printf("line_min_length %f\n", cfg_min_length_);
+    printf("line_min_distance %f\n", cfg_line_min_distance_);
     printf("line_cluster_tolerance %f\n", cfg_line_cluster_tolerance_);
     printf("line_cluster_quota %f\n", cfg_line_cluster_quota_);
     printf("switch_tolerance %f\n", cfg_switch_tolerance_);
@@ -267,7 +269,7 @@ class LaserLines {
 
       info.base_point = P;
 
-      if (info.base_point.norm() < 0.25) {
+      if (info.base_point.norm() < cfg_line_min_distance_) {
 	//logger->log_warn(name(), "[L %u] line too short (%f, required %f)",
 	//	       loop_count_, info.base_point.norm(), 0.25);
 	continue;
@@ -541,6 +543,7 @@ class LaserLines {
   double       cfg_segm_distance_threshold_;
   double       cfg_segm_sample_max_dist_;
   double       cfg_min_length_;
+  double       cfg_line_min_distance_;
   int          cfg_segm_min_inliers_;
   double       cfg_switch_tolerance_;
   double       cfg_line_cluster_tolerance_;
