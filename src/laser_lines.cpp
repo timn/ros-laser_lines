@@ -32,7 +32,6 @@
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 
-#include <pcl_conversions/pcl_conversions.h>
 #include <pcl/segmentation/sac_segmentation.h>
 #include <pcl/segmentation/extract_clusters.h>
 #include <pcl/sample_consensus/method_types.h>
@@ -45,6 +44,16 @@
 #include <pcl/common/centroid.h>
 #include <pcl/common/transforms.h>
 #include <pcl/common/distances.h>
+
+#if PCL_VERSION_COMPARE(>=,1,7,0)
+#  include <pcl_conversions/pcl_conversions.h>
+#endif
+
+// Set this if you want to force the use of the old PCL code path.
+// This is useful to test on newer hosts that the code for older ones
+// should in principal work.
+#define FORCE_OLD_PCL
+
 
 #include <Eigen/StdVector>
 
@@ -142,7 +151,11 @@ class LaserLines {
     }
 
     CloudPtr input(new Cloud());
+#if PCL_VERSION_COMPARE(>=,1,7,0)
     moveFromROSMsg(cloud, *input);
+#else
+    pcl::fromROSMsg(cloud, *input);
+#endif
 
     CloudPtr in_cloud(new Cloud());
     {
@@ -159,10 +172,6 @@ class LaserLines {
       // Segment the largest linear component from the remaining cloud
       //logger->log_info(name(), "[L %u] %zu points left",
       //		     loop_count_, in_cloud->points.size());
-      
-      pcl::search::KdTree<PointType>::Ptr
-	search(new pcl::search::KdTree<PointType>);
-      search->setInputCloud(in_cloud);
 
       pcl::SACSegmentation<PointType> seg;
       seg.setOptimizeCoefficients(true);
@@ -170,7 +179,12 @@ class LaserLines {
       seg.setMethodType(pcl::SAC_RANSAC);
       seg.setMaxIterations(cfg_segm_max_iterations_);
       seg.setDistanceThreshold(cfg_segm_distance_threshold_);
+#if PCL_VERSION_COMPARE(>=,1,7,0) && ! defined(FORCE_OLD_PCL)
+      pcl::search::KdTree<PointType>::Ptr
+	search(new pcl::search::KdTree<PointType>);
+      search->setInputCloud(in_cloud);
       seg.setSamplesMaxDist(cfg_segm_sample_max_dist_, search); 
+#endif
       seg.setInputCloud(in_cloud);
       seg.segment(*inliers, *coeff);
       if (inliers->indices.size () == 0) {
@@ -193,26 +207,42 @@ class LaserLines {
       // the line search can output a line which combines lines at separate
       // ends of the field of view...
 
-      pcl::search::KdTree<PointType>::Ptr
-	kdtree_line_cluster(new pcl::search::KdTree<PointType>());
-      pcl::search::KdTree<PointType>::IndicesConstPtr
-	search_indices(new std::vector<int>(inliers->indices));
-      kdtree_line_cluster->setInputCloud(in_cloud, search_indices);
+#if PCL_VERSION_COMPARE(<,1,7,0) || defined(FORCE_OLD_PCL)
+      CloudPtr line_cloud(new Cloud());
+      {
+	pcl::ExtractIndices<PointType> extract;
+	extract.setInputCloud(in_cloud);
+	extract.setIndices(inliers);
+	extract.setNegative(false);
+	extract.filter(*line_cloud);
+      }
+#endif
 
       std::vector<pcl::PointIndices> line_cluster_indices;
       pcl::EuclideanClusterExtraction<PointType> line_ec;
+      pcl::search::KdTree<PointType>::Ptr
+	kdtree_line_cluster(new pcl::search::KdTree<PointType>());
       line_ec.setClusterTolerance(cfg_line_cluster_tolerance_);
       line_ec.setMinClusterSize(cfg_line_cluster_quota_ * inliers->indices.size());
       line_ec.setMaxClusterSize(inliers->indices.size());
-      line_ec.setSearchMethod(kdtree_line_cluster);
+#if PCL_VERSION_COMPARE(>=,1,7,0) && ! defined(FORCE_OLD_PCL)
       line_ec.setInputCloud(in_cloud);
       line_ec.setIndices(inliers);
+      pcl::search::KdTree<PointType>::IndicesConstPtr
+	search_indices(new std::vector<int>(inliers->indices));
+      kdtree_line_cluster->setInputCloud(in_cloud, search_indices);
+#else
+      line_ec.setInputCloud(line_cloud);
+      kdtree_line_cluster->setInputCloud(line_cloud);
+#endif
+      line_ec.setSearchMethod(kdtree_line_cluster);
       line_ec.extract(line_cluster_indices);
 
       pcl::PointIndices::Ptr line_cluster_index;
       if (! line_cluster_indices.empty()) {
 	line_cluster_index = pcl::PointIndices::Ptr(new pcl::PointIndices(line_cluster_indices[0]));
       }
+
 
       // re-calculate coefficients based on line cluster only
       if (line_cluster_index) {
@@ -222,19 +252,34 @@ class LaserLines {
 	segc.setMethodType(pcl::SAC_RANSAC);
 	segc.setMaxIterations(cfg_segm_max_iterations_);
 	segc.setDistanceThreshold(cfg_segm_distance_threshold_);
+#if PCL_VERSION_COMPARE(>=,1,7,0) && ! defined(FORCE_OLD_PCL)
 	segc.setInputCloud(in_cloud);
 	segc.setIndices(line_cluster_index);
-	segc.segment(*inliers, *coeff);
+#else
+	segc.setInputCloud(line_cloud);
+#endif
+	segc.segment(*line_cluster_index, *coeff);
       }
 
       // Remove the linear or clustered inliers, extract the rest
       CloudPtr cloud_f(new Cloud());
       CloudPtr cloud_line(new Cloud());
       pcl::ExtractIndices<PointType> extract;
+#if PCL_VERSION_COMPARE(>=,1,7,0) && ! defined(FORCE_OLD_PCL)
       extract.setInputCloud(in_cloud);
+#else
+      extract.setInputCloud(line_cluster_index ? line_cloud : in_cloud);
+#endif
       extract.setIndices(line_cluster_index ? line_cluster_index : inliers);
       extract.setNegative(false);
       extract.filter(*cloud_line);
+
+#if PCL_VERSION_COMPARE(<,1,7,0) || defined(FORCE_OLD_PCL)
+      // old PCL: always remove all that were considered inliers
+      // as we could not filter the indices properly (PCL 1.5 seems to be broken)
+      extract.setInputCloud(in_cloud);
+      extract.setIndices(inliers);
+#endif
 
       extract.setNegative(true);
       extract.filter(*cloud_f);

@@ -10,6 +10,8 @@
   <depend package="angles"/>
   <depend package="pcl"/>
   <depend package="pcl_ros"/>
+  <!-- On pure Fuerte systems with the old PCL the pcl_conversions dependency
+       must be removed. On the PR2 we added a dummy package to alleviate this. -->
   <depend package="pcl_conversions"/>
   <depend package="sensor_msgs"/>
   <depend package="geometry_msgs"/>
