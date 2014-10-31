@@ -243,7 +243,8 @@ class LaserLines {
       pcl::search::KdTree<PointType>::Ptr
 	kdtree_line_cluster(new pcl::search::KdTree<PointType>());
       line_ec.setClusterTolerance(cfg_line_cluster_tolerance_);
-      line_ec.setMinClusterSize(cfg_line_cluster_quota_ * inliers->indices.size());
+      size_t min_size = (size_t)floorf(cfg_line_cluster_quota_ * inliers->indices.size());
+      line_ec.setMinClusterSize(min_size);
       line_ec.setMaxClusterSize(inliers->indices.size());
 #if PCL_VERSION_COMPARE(>=,1,7,0) && ! defined(FORCE_OLD_PCL)
       line_ec.setInputCloud(in_cloud);
@@ -274,11 +275,13 @@ class LaserLines {
 	segc.setDistanceThreshold(cfg_segm_distance_threshold_);
 #if PCL_VERSION_COMPARE(>=,1,7,0) && ! defined(FORCE_OLD_PCL)
 	segc.setInputCloud(in_cloud);
-	segc.setIndices(line_cluster_index);
 #else
 	segc.setInputCloud(line_cloud);
 #endif
-	segc.segment(*line_cluster_index, *coeff);
+	segc.setIndices(line_cluster_index);
+	pcl::PointIndices::Ptr tmp_index(new pcl::PointIndices());
+	segc.segment(*tmp_index, *coeff);
+	*line_cluster_index = *tmp_index;
       }
 
       // Remove the linear or clustered inliers, extract the rest
