@@ -277,6 +277,7 @@ class LandmarkFrame {
     }
     if (l == landmarks_.end()) {
       ROS_WARN("No matching landmark specification found");
+      transform_valid_ = false;
       return;
     }
 
@@ -297,7 +298,7 @@ class LandmarkFrame {
                       fabs(delta_y) > cfg_thresh_d_ ||
                       fabs(delta_a) > cfg_thresh_a_;
 
-    bool update = odom_moved || fabs(delta_t) < cfg_thresh_t_;
+    bool update = odom_moved || fabs(delta_t) < cfg_thresh_t_ || ! transform_valid_;
 
     if (! update) {
       if (transform_valid_) {
