@@ -36,6 +36,28 @@
 
 #include <Eigen/Geometry>
 
+static double
+normalize(double z)
+{
+  return atan2(sin(z),cos(z));
+}
+static double
+angle_diff(double a, double b)
+{
+  double d1, d2;
+  a = normalize(a);
+  b = normalize(b);
+  d1 = a-b;
+  d2 = 2*M_PI - fabs(d1);
+  if(d1 > 0)
+    d2 *= -1.0;
+  if(fabs(d1) < fabs(d2))
+    return(d1);
+  else
+    return(d2);
+}
+
+
 class Landmark {
  public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
@@ -185,9 +207,29 @@ class LandmarkFrame {
   {
     ros::NodeHandle privnh("~");
 
+    last_odom_pose_[0] = 0.;
+    last_odom_pose_[1] = 0.;
+    last_odom_pose_[2] = 0.;
+    last_odom_time_ = ros::Time(0);
+    transform_valid_ = false;
+
     privnh.param("default_frame", cfg_default_frame_, std::string("/landmark"));
     privnh.param("global_frame", cfg_global_frame_, std::string("/map"));
+    privnh.param("odom_frame", cfg_odom_frame_, std::string("odom"));
+    privnh.param("base_frame", cfg_base_frame_, std::string("base_link"));
     privnh.param("intersection_tolerance", cfg_intersection_tolerance_, 0.4);
+    privnh.param("thresh_d", cfg_thresh_d_, 0.05);
+    privnh.param("thresh_a", cfg_thresh_a_, 0.05);
+    privnh.param("thresh_t", cfg_thresh_t_, 2.0);
+
+    printf("default_frame %s\n", cfg_default_frame_.c_str());
+    printf("global_frame %s\n", cfg_global_frame_.c_str());
+    printf("odom_frame %s\n", cfg_odom_frame_.c_str());
+    printf("base_frame %s\n", cfg_base_frame_.c_str());
+    printf("intersection_tolerance %f\n", cfg_intersection_tolerance_);
+    printf("thresh_d %f\n", cfg_thresh_d_);
+    printf("thresh_a %f\n", cfg_thresh_a_);
+    printf("thresh_t %f\n", cfg_thresh_t_);
 
     std::string filename;
     if (! privnh.getParam("file", filename)) {
@@ -237,6 +279,43 @@ class LandmarkFrame {
       ROS_WARN("No matching landmark specification found");
       return;
     }
+
+    // *** check if we should actually update
+    double odom_x = 0., odom_y = 0., odom_yaw = 0.;
+    if(!get_odom_pose(odom_x, odom_y, odom_yaw, lines->header.stamp))
+    {
+      ROS_ERROR("Couldn't determine robot's pose associated with laser lines");
+      return;
+    }
+
+    double delta_x = odom_x - last_odom_pose_[0];
+    double delta_y = odom_y - last_odom_pose_[1];
+    double delta_a = angle_diff(odom_yaw, last_odom_pose_[2]);
+    double delta_t = (ros::Time::now() - last_odom_time_).toSec();
+
+    bool odom_moved = fabs(delta_x) > cfg_thresh_d_ ||
+                      fabs(delta_y) > cfg_thresh_d_ ||
+                      fabs(delta_a) > cfg_thresh_a_;
+
+    bool update = odom_moved || fabs(delta_t) < cfg_thresh_t_;
+
+    if (! update) {
+      if (transform_valid_) {
+        ROS_INFO("Not moved, not updating frame but republishing old one");
+        transform_.stamp_ = ros::Time::now();
+        tf_bc_.sendTransform(transform_);
+      } else {
+        ROS_INFO("Not moved and no valid transform, yet. Simply skipping.");
+      }
+      return;
+    }
+
+    if (odom_moved) {
+      last_odom_time_ = ros::Time::now();
+    }
+    last_odom_pose_[0] = odom_x;
+    last_odom_pose_[1] = odom_y;
+    last_odom_pose_[2] = odom_yaw;
 
     //ROS_INFO("Using landmark sector %s", lm.name.c_str());
 
@@ -433,7 +512,9 @@ class LandmarkFrame {
       }
 
       // publish transform
-      tf_bc_.sendTransform(tf::StampedTransform(fpgt, ros::Time::now(), lines->header.frame_id, lm.frame));
+      transform_ = tf::StampedTransform(fpgt, ros::Time::now(), lines->header.frame_id, lm.frame);
+      transform_valid_ = true;
+      tf_bc_.sendTransform(transform_);
 
       // publish visualization
       visualization_msgs::MarkerArray m;
@@ -475,6 +556,31 @@ class LandmarkFrame {
 
   }
 
+
+  bool
+  get_odom_pose(double& x, double& y, double& yaw, const ros::Time& t)
+  {
+    tf::Stamped<tf::Pose> odom_pose;
+    // Get the robot's pose
+    tf::Stamped<tf::Pose> ident(tf::Transform(tf::createIdentityQuaternion(),
+					      tf::Vector3(0,0,0)), t, cfg_base_frame_);
+    if (! tf_listener_.waitForTransform(cfg_odom_frame_, cfg_base_frame_, t, ros::Duration(1.0))) {
+      ROS_WARN("Waiting for transform timed out, skipping loop");
+      return false;
+    }
+    try {
+      tf_listener_.transformPose(cfg_odom_frame_, ident, odom_pose);
+    } catch(tf::TransformException e) {
+      ROS_WARN("Failed to compute odom pose, skipping scan (%s)", e.what());
+      return false;
+    }
+    x = odom_pose.getOrigin().x();
+    y = odom_pose.getOrigin().y();
+    double pitch,roll;
+    odom_pose.getBasis().getEulerYPR(yaw, pitch, roll);
+
+    return true;
+  }
 
   void read_config(const std::string &filename)
   {
@@ -520,16 +626,25 @@ class LandmarkFrame {
 
   std::string cfg_default_frame_;
   std::string cfg_global_frame_;
+  std::string cfg_odom_frame_;
+  std::string cfg_base_frame_;
   double      cfg_intersection_tolerance_;
+  double      cfg_thresh_d_;
+  double      cfg_thresh_a_;
+  double      cfg_thresh_t_;
 
   ros::Subscriber          sub_lines_;
   ros::Publisher           pub_vis_marker_;
   tf::TransformBroadcaster tf_bc_;
   tf::TransformListener    tf_listener_;
   
-  std::list<Landmark> landmarks_;
+  std::list<Landmark>  landmarks_;
+  tf::StampedTransform transform_;
+  bool                 transform_valid_;
 
   size_t last_id_num_;
+  double last_odom_pose_[3];
+  ros::Time last_odom_time_;
 };
 
 

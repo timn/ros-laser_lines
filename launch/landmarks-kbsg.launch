@@ -35,5 +35,10 @@
     <param name="default_frame" value="/landmark" type="string" />
     <param name="global_frame" value="/map" type="string" />
     <param name="intersection_tolerance" value="0.6" type="double" />
+    <param name="odom_frame" value="/odom_combined" type="string" />
+    <param name="base_frame" value="/base_link" type="string" />
+    <param name="thresh_d" value="0.1" type="double" />
+    <param name="thresh_a" value="0.1" type="double" />
+    <param name="thresh_t" value="4.0" type="double" />
   </node>
 </launch>
