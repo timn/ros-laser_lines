@@ -1,44 +1,63 @@
-cmake_minimum_required(VERSION 2.4.6)
-include($ENV{ROS_ROOT}/core/rosbuild/rosbuild.cmake)
+cmake_minimum_required(VERSION 2.8.3)
 
-find_package(PkgConfig)
+project(laser_lines)
 
-# Set the build type.  Options are:
-#  Coverage       : w/ debug symbols, w/o optimization, w/ code-coverage
-#  Debug          : w/ debug symbols, w/o optimization
-#  Release        : w/o debug symbols, w/ optimization
-#  RelWithDebInfo : w/ debug symbols, w/ optimization
-#  MinSizeRel     : w/o debug symbols, w/ optimization, stripped binaries
-set(ROS_BUILD_TYPE RelWithDebInfo)
+find_package(catkin REQUIRED COMPONENTS
+  roscpp
+  std_msgs
+  geometry_msgs
+  message_generation
+  tf
+  nav_msgs
+  laser_geometry
+)
+find_package(Boost REQUIRED COMPONENTS system filesystem thread)
+find_package(Eigen3 REQUIRED)
+find_package(PCL 1.7 REQUIRED)
 
-rosbuild_init()
+catkin_python_setup()
 
-#set the default path for built executables to the "bin" directory
-set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
-#set the default path for built libraries to the "lib" directory
-set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
+## Add include directories
+include_directories(include
+  ${Boost_INCLUDE_DIRS}
+  ${catkin_INCLUDE_DIRS}
+  ${Eigen3_INCLUDE_DIRS}
+  ${PCL_INCLUDE_DIRS}
+)
+#generate_dynamic_reconfigure_options(cfg/CalibrateAngular.cfg cfg/CalibrateLinear.cfg)
 
-pkg_check_modules(YAML_CPP REQUIRED yaml-cpp)
-pkg_check_modules(EIGEN REQUIRED eigen3)
+#generate_dynamic_reconfigure_options(cfg/CalibrateAngular.cfg cfg/CalibrateLinear.cfg)
+#
 
-rosbuild_genmsg()
-#rosbuild_gensrv()
+add_message_files(
+   FILES
+   LaserLine.msg
+   LaserLines.msg
+)
+generate_messages(
+  DEPENDENCIES
+  std_msgs
+  geometry_msgs
+)
 
-add_definitions(-Wno-unused-local-typedefs)
-include_directories(${YAML_CPP_INCLUDE_DIRS} ${EIGEN_INCLUDE_DIRS})
+#catkin_package(CATKIN_DEPENDS dynamic_reconfigure)
 
-if (${YAML_CPP_VERSION} VERSION_GREATER 0.4)
-  add_definitions(-DHAVE_YAMLCPP_0_5)
-endif()
-
-#common commands for building c++ executables and libraries
-#rosbuild_add_library(${PROJECT_NAME} src/example.cpp)
-#target_link_libraries(${PROJECT_NAME} another_library)
-#rosbuild_add_boost_directories()
-#rosbuild_link_boost(${PROJECT_NAME} thread)
-rosbuild_add_executable(laser_lines src/laser_lines.cpp)
+catkin_package(
+#  INCLUDE_DIRS include
+#  LIBRARIES beginner_tutorials
+  CATKIN_DEPENDS roscpp std_msgs message_runtime geometry_msgs dynamic_reconfigure
+#  DEPENDS system_lib
+  DEPENDS
+    Boost
+    Eigen3
+    PCL
+)
+##
+##catkin_package(CATKIN_DEPENDS dynamic_reconfigure)
+##include_directories(
+##  ${catkin_INCLUDE_DIRS}
+##)
+###
+add_executable(laser_lines src/laser_lines.cpp)
+target_link_libraries(laser_lines ${Boost_LIBRARIES} ${catkin_LIBRARIES} ${Eigen3_LIBRARIES} ${PCL_LIBRARIES})
 set_property(TARGET laser_lines PROPERTY COMPILE_DEFINITION -DBOOST_SIGNALS_NO_DEPRECATION_WARNING)
-#target_link_libraries(example ${PROJECT_NAME})
-
-rosbuild_add_executable(landmark_frame src/landmark_frame.cpp)
-target_link_libraries(landmark_frame ${YAML_CPP_LIBRARIES} ${EIGEN_LIBRARIES})

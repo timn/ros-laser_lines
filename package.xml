@@ -1,0 +1,88 @@
+<!--<package>-->
+  <!--<description brief="laser_lines">-->
+  <!--</description>-->
+  <!--<author>Tim Niemueller</author>-->
+  <!--<license>GPLv2+</license>-->
+  <!--<url>http://ros.org/wiki/laser_lines</url>-->
+
+  <!--<buildtool_depend>catkin</buildtool_depend>-->
+
+  <!--<build_depend>roscpp</build_depend>-->
+  <!--<build_depend>rospy</build_depend>-->
+  <!--<build_depend>angles</build_depend>-->
+  <!--<build_depend>geometry_msgs</build_depend>-->
+  <!--<build_depend>nav_msgs</build_depend>-->
+  <!--<build_depend>move_base_msgs</build_depend>-->
+  <!--<build_depend>visualization_msgs</build_depend>-->
+  <!--<build_depend>tf</build_depend>-->
+  <!--<build_depend>actionlib</build_depend>-->
+  <!--<build_depend>orocos_kdl</build_depend>-->
+  <!--<build_depend>dynamic_reconfigure</build_depend>-->
+  <!--<build_depend>pcl_ros</build_depend>-->
+  <!--<build_depend>pcl_conversions</build_depend>-->
+  <!--<build_depend>sensor_msgs</build_depend>-->
+  <!--<build_depend>laser_geometry</build_depend>-->
+
+  <!--<run_depend>roscpp</run_depend>-->
+  <!--<run_depend>rospy</run_depend>-->
+  <!--<run_depend>angles</run_depend>-->
+  <!--<run_depend>geometry_msgs</run_depend>-->
+  <!--<run_depend>nav_msgs</run_depend>-->
+  <!--<run_depend>move_base_msgs</run_depend>-->
+  <!--<run_depend>visualization_msgs</run_depend>-->
+  <!--<run_depend>tf</run_depend>-->
+  <!--<run_depend>actionlib</run_depend>-->
+  <!--<run_depend>orocos_kdl</run_depend>-->
+  <!--<run_depend>dynamic_reconfigure</run_depend>-->
+  <!--<run_depend>pcl_ros</run_depend>-->
+  <!--<run_depend>pcl_conversions</run_depend>-->
+  <!--<run_depend>sensor_msgs</run_depend>-->
+  <!--<run_depend>laser_geometry</run_depend>-->
+
+<!--</package>-->
+
+<package>
+  <name>laser_lines</name>
+  <version>0.4.0</version>
+
+  <description>ROS by Example Vol 1 Navigation Package</description>
+
+  <maintainer email="patrick@pirobot.org">Patrick Goebel</maintainer>
+  <license>BSD</license>
+  <url type="website">http://ros.org/wiki/mybot_nav</url>
+  <url type="bugtracker">https://github.com/pirobot/mybot/issues</url>
+  <author email="patrick@pirobot.org">Patrick Goebel</author>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <build_depend>roscpp</build_depend>
+  <build_depend>rospy</build_depend>
+  <build_depend>std_msgs</build_depend>
+  <build_depend>geometry_msgs</build_depend>
+  <build_depend>nav_msgs</build_depend>
+  <build_depend>move_base_msgs</build_depend>
+  <build_depend>visualization_msgs</build_depend>
+  <build_depend>tf</build_depend>
+  <build_depend>actionlib</build_depend>
+  <build_depend>orocos_kdl</build_depend>
+  <build_depend>dynamic_reconfigure</build_depend>
+  <build_depend>laser_geometry</build_depend>
+
+  <run_depend>roscpp</run_depend>
+  <run_depend>rospy</run_depend>
+  <run_depend>std_msgs</run_depend>
+  <run_depend>message_runtime</run_depend>
+  <run_depend>geometry_msgs</run_depend>
+  <run_depend>nav_msgs</run_depend>
+  <run_depend>move_base_msgs</run_depend>
+  <run_depend>visualization_msgs</run_depend>
+  <run_depend>tf</run_depend>
+  <run_depend>actionlib</run_depend>
+  <run_depend>orocos_kdl</run_depend>
+  <run_depend>dynamic_reconfigure</run_depend>
+  <run_depend>laser_geometry</run_depend>
+
+  <export>
+
+  </export>
+</package>
