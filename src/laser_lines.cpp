@@ -31,45 +31,45 @@
 //#define PCL16
 
 #ifdef PCL16
-#  include <pcl16/point_cloud.h>
-#  include <pcl16/point_types.h>
-#  include <pcl16/segmentation/sac_segmentation.h>
-#  include <pcl16/segmentation/extract_clusters.h>
-#  include <pcl16/sample_consensus/method_types.h>
-#  include <pcl16/sample_consensus/model_types.h>
-#  include <pcl16/filters/extract_indices.h>
-#  include <pcl16/filters/extract_indices.h>
-#  include <pcl16/filters/passthrough.h>
-#  include <pcl16/filters/project_inliers.h>
-#  include <pcl16/search/kdtree.h>
-#  include <pcl16/common/centroid.h>
-#  include <pcl16/common/transforms.h>
-#  include <pcl16/common/distances.h>
+#include <pcl16/point_cloud.h>
+#include <pcl16/point_types.h>
+#include <pcl16/segmentation/sac_segmentation.h>
+#include <pcl16/segmentation/extract_clusters.h>
+#include <pcl16/sample_consensus/method_types.h>
+#include <pcl16/sample_consensus/model_types.h>
+#include <pcl16/filters/extract_indices.h>
+#include <pcl16/filters/extract_indices.h>
+#include <pcl16/filters/passthrough.h>
+#include <pcl16/filters/project_inliers.h>
+#include <pcl16/search/kdtree.h>
+#include <pcl16/common/centroid.h>
+#include <pcl16/common/transforms.h>
+#include <pcl16/common/distances.h>
 
 namespace pcl = pcl16;
 
 #else
 
-#  include <pcl/point_cloud.h>
-#  include <pcl/point_types.h>
-#  include <pcl/segmentation/sac_segmentation.h>
-#  include <pcl/segmentation/extract_clusters.h>
-#  include <pcl/sample_consensus/method_types.h>
-#  include <pcl/sample_consensus/model_types.h>
-#  include <pcl/filters/extract_indices.h>
-#  include <pcl/filters/extract_indices.h>
-#  include <pcl/filters/passthrough.h>
-#  include <pcl/filters/project_inliers.h>
-#  include <pcl/search/kdtree.h>
-#  include <pcl/common/centroid.h>
-#  include <pcl/common/transforms.h>
-#  include <pcl/common/distances.h>
+#include <pcl/point_cloud.h>
+#include <pcl/point_types.h>
+#include <pcl/segmentation/sac_segmentation.h>
+#include <pcl/segmentation/extract_clusters.h>
+#include <pcl/sample_consensus/method_types.h>
+#include <pcl/sample_consensus/model_types.h>
+#include <pcl/filters/extract_indices.h>
+#include <pcl/filters/extract_indices.h>
+#include <pcl/filters/passthrough.h>
+#include <pcl/filters/project_inliers.h>
+#include <pcl/search/kdtree.h>
+#include <pcl/common/centroid.h>
+#include <pcl/common/transforms.h>
+#include <pcl/common/distances.h>
 
 #endif
 
 #if PCL_VERSION_COMPARE(>=, 1, 7, 0)
 
-#  include <pcl_conversions/pcl_conversions.h>
+#include <pcl_conversions/pcl_conversions.h>
 
 #endif
 

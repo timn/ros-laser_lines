@@ -31,7 +31,7 @@
 #include <yaml-cpp/yaml.h>
 
 #ifndef HAVE_YAMLCPP_0_5
-#  include <fstream>
+#include <fstream>
 #endif
 
 #include <Eigen/Geometry>
@@ -543,7 +543,7 @@ public:
           delop.action = visualization_msgs::Marker::DELETE;
           m.markers.push_back(delop);
         }
-        pub_vis_marker_.publish(m);
+//        pub_vis_marker_.publish(m);
         last_id_num_ = id_num;
       } else {
         ROS_WARN("Best intersection not within tolerance: %f > %f",

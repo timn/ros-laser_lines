@@ -1,34 +1,34 @@
 <launch>
   <node pkg="laser_lines" type="laser_lines" respawn="true" name="laser_lines" output="screen">
-    <!--<remap from="scan" to="base_scan" />-->
-    <!--<remap from="lines" to="laser_lines" />-->
+    <!-- <remap from="scan" to="base_scan" /> -->
+    <remap from="lines" to="laser_lines" />
 
     <!-- Maximum number of iterations for RANSAC line detection --> 
-    <!--<param name="line_segmentation_max_iterations" value="250" type="double" />-->
+    <param name="line_segmentation_max_iterations" value="100" type="double" />
     <!-- Maximum distance of points to a line model to support it -->
-    <!--<param name="line_segmentation_distance_threshold" value="0.03" type="double" />-->
+    <param name="line_segmentation_distance_threshold" value="0.15" type="double" />
     <!-- Maximum distance from existing points to sample more points from.
       This allows to avoid detecting lines which are supported by points far apart.  -->
-    <!--<param name="line_segmentation_sample_max_dist" value="0.05" type="double" />-->
+    <param name="line_segmentation_sample_max_dist" value="0.15" type="double" />
     <!-- Minimum number of points required before considering a line. -->
-    <!--<param name="line_segmentation_min_inliers" value="50" type="int" />-->
+    <param name="line_segmentation_min_inliers" value="25" type="int" />
     <!-- Minimum length of detected lines to consider them. -->
-    <!--<param name="line_min_length" value="0.6" type="double" />-->
+    <param name="line_min_length" value="0.6" type="double" />
     <!-- After a line is found, it is clustered again to remove large gaps, ie.
          only the longest line will survive. The cluster tolerance defines the
 	 maximum gap size to accept. -->
-    <!--<param name="line_cluster_tolerance" value="0.3" type="double" />-->
+    <param name="line_cluster_tolerance" value="0.4" type="double" />
     <!-- At least this fraction of the points of the original line model must
          survive clustering, otherwise the line is rejected. -->
-    <!--<param name="line_cluster_quota" value="0.5" type="double" />-->
+    <param name="line_cluster_quota" value="0.5" type="double" />
     <!-- The minimum distance of the point on line to the sensor frame. -->
-    <!--<param name="line_min_distance" value="0.1" type="double" />-->
+    <param name="line_min_distance" value="0.5" type="double" />
     <!-- If a point on line has moved from the previous data by at least this
          much consider it to be a different cluster. -->
-    <!--<param name="switch_tolerance" value="0.3" type="double" />-->
+    <param name="switch_tolerance" value="0.3" type="double" />
   </node>
 
-  <node pkg="laser_lines" type="landmark_frame" respawn="true" name="landmark_frame" output="screen">
+  <node pkg="laser_lines" type="landmark_frame" respawn="true" name="landmark_frame" output="screen"> -->
     <remap from="lines" to="laser_lines" />
 
     <param name="file" value="$(find laser_lines)/cfg/kbsg-kitchen.yaml" type="string" />
