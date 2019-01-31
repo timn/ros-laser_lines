@@ -3,7 +3,7 @@
   <version>0.4.0</version>
 
   <description>Line detector for Lidar Data</description>
-  <license>BSD</license>
+  <license>GPLv2+</license>
   <author email="niemueller@kbsg.rwth-aachen.de">Tim Niemueller</author>
   <maintainer email="niemueller@kbsg.rwth-aachen.de">Tim Niemueller</maintainer>
 
