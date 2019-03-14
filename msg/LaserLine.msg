@@ -14,3 +14,11 @@ geometry_msgs/Vector3  line_direction
 # Direction towards the line, i.e. if the robot turns by this angle
 # the robot will stand parallel to the line.
 float32                bearing
+
+# Extreme points of the line segment
+geometry_msgs/Point point_1
+geometry_msgs/Point point_2
+
+# Length of line segment
+float32     length
+
