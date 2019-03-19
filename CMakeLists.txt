@@ -35,6 +35,8 @@ add_message_files(
    FILES
    LaserLine.msg
    LaserLines.msg
+   Tunnel.msg
+   Tunnels.msg
 )
 generate_messages(
   DEPENDENCIES
