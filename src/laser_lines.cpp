@@ -123,6 +123,9 @@ class LaserLines {
 
         CloudPtr cloud;
 
+        Eigen::Vector3f point_1, point_2; // Extreme points of the line
+        float length;
+
         bool operator<(const LineInfo &other) const { return bearing < other.bearing; }
     };
 
@@ -329,8 +332,8 @@ public:
         info.cloud.reset(new Cloud());
 
         // Check if this line has the requested minimum length
-        float length = calc_line_length(cloud_line, coeff);
-        if (length < cfg_min_length_) {
+        calc_line_length(cloud_line, coeff, info.length, info.point_1, info.point_2);
+        if (info.length < cfg_min_length_) {
           continue;
         }
 
@@ -380,8 +383,8 @@ public:
     }
 
 
-    float calc_line_length(CloudPtr cloud_line, pcl::ModelCoefficients::Ptr coeff) {
-      if (cloud_line->points.size() < 2) return 0.;
+    void calc_line_length(CloudPtr cloud_line, pcl::ModelCoefficients::Ptr coeff, float &length, Eigen::Vector3f &p1, Eigen::Vector3f &p2) {
+      if (cloud_line->points.size() < 2) return ;
 
       //CloudPtr cloud_line(new Cloud());
       CloudPtr cloud_line_proj(new Cloud());
@@ -432,10 +435,20 @@ public:
         Eigen::Vector3f ptv_1(pt_1.x, pt_1.y, pt_1.z);
         Eigen::Vector3f ptv_2(pt_2.x, pt_2.y, pt_2.z);
 
-        return (ptv_1 - ptv_2).norm();
+        length =  (ptv_1 - ptv_2).norm();
+
+        // Extreme points
+        p1[0] = pt_1.x;
+        p1[1] = pt_1.y;
+        p1[2] = pt_1.z;
+
+        p2[0] = pt_2.x;
+        p2[1] = pt_2.y;
+        p2[2] = pt_2.z;
+
       } else {
-        return 0.f;
-      }
+        length = 0.f;
+      }      
     }
 
     void publish(std::vector<LineInfo> &lines, const std::string &frame_id, const ros::Time &time) {
@@ -469,6 +482,16 @@ public:
         line_msg.line_direction.x = li.line_direction[0];
         line_msg.line_direction.y = li.line_direction[1];
         line_msg.line_direction.z = li.line_direction[2];
+
+        line_msg.point_1.x = li.point_1[0];
+        line_msg.point_1.y = li.point_1[1];
+        line_msg.point_1.z = li.point_1[2];
+        
+        line_msg.point_2.x = li.point_2[0];
+        line_msg.point_2.y = li.point_2[1];
+        line_msg.point_2.z = li.point_2[2];
+
+        line_msg.length = li.length;
 
         lines_msg.lines.push_back(line_msg);
       }
