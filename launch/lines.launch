@@ -2,7 +2,7 @@
 <launch>
 
     <!-- Laser lines node -->
-    <node name="laser_lines" pkg="laser_lines" type="laser_lines" output="screen">
+    <node name="laser_lines" pkg="laser_lines" type="laser_lines" args=">/dev/null 2>/dev/null">
         <!-- <param name="line_min_length" type="double" value="0.5" />
         <param name="line_segmentation_distance_threshold" type="double" value="0.2" />  -->
 

@@ -162,7 +162,7 @@ public:
 
       sub_scan_ = nh_.subscribe("scan", 1, &LaserLines::process_scan, this);
       pub_lines_ = nh_.advertise<laser_lines::LaserLines>("lines", 1, true);
-      pub_vis_marker_ = nh_.advertise<visualization_msgs::MarkerArray>("visualization_marker_array", 1, false);
+      pub_vis_marker_ = nh_.advertise<visualization_msgs::MarkerArray>("laser_lines_marker", 1, false);
       pub_vis_cloud_ = nh_.advertise<sensor_msgs::PointCloud2>("lines_cloud", 1, false);
     }
 
